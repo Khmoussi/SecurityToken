@@ -14,13 +14,20 @@ import org.springframework.web.bind.annotation.*;
 public class AuthentificationController {
     private final AuthenticationService authenticationService;
 @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request){
-return  ResponseEntity.ok(authenticationService.register(request));
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request){
+    AuthenticationResponse response=authenticationService.register(request);
+    if(response==null)
+        return  ResponseEntity.badRequest().body("user already exists");
+
+    return  ResponseEntity.ok(response);
 }
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request ) throws Exception {
+    public ResponseEntity<?> authenticate(@RequestBody AuthenticationRequest request ) throws Exception {
 
-        return ResponseEntity.ok(authenticationService.authenticate(request));
+    AuthenticationResponse response=authenticationService.authenticate(request);
+    if(response == null)
+        return  ResponseEntity.badRequest().body("user unauthorized");
+        return ResponseEntity.ok(response);
     }
     @GetMapping("/hello")
     String hello(){

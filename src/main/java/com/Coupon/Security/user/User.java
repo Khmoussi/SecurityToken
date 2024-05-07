@@ -21,7 +21,6 @@ import java.util.List;
 public class User implements UserDetails {
 @Id
 private String email;
-    private Integer id;
     private String firstname;
     private String lastname;
 

@@ -4,6 +4,7 @@ import com.Coupon.Security.Utilities.JwtService;
 import com.Coupon.Security.user.Role;
 import com.Coupon.Security.user.User;
 import com.Coupon.Security.user.UserRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,6 +21,8 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private  final AuthenticationManager authenticationManager;
     public AuthenticationResponse register(RegisterRequest request) {
+        if(repository.existsById(request.getEmail()))
+            return null;
    var user = User.builder()
            .firstname(request.getFirstname())
            .lastname(request.getLastname())
@@ -29,7 +32,12 @@ public class AuthenticationService {
            .build();
    repository.save(user);
    var jwtToken=jwtService.generateToken(user);
-   return  AuthenticationResponse.builder().token(jwtToken).build();
+      return  AuthenticationResponse.builder().token(jwtToken)
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .email(user.getEmail()).
+              role(user.getRole()).
+                build();
 
     }
     public  AuthenticationResponse authenticate(AuthenticationRequest request) throws Exception {
@@ -48,7 +56,7 @@ catch (BadCredentialsException e)
 {
     System.out.println("Bad Credentials ");
     e.printStackTrace();
-
+return null;
 }
 
 
@@ -56,5 +64,25 @@ catch (BadCredentialsException e)
         var user= repository.findByEmail(request.getEmail()) .orElseThrow(() -> new Exception("User not found with email: " + request.getEmail()));
         var jwtToken=jwtService.generateToken(user);
 
-        return  AuthenticationResponse.builder().token(jwtToken).build();    }
+        return  AuthenticationResponse.builder().token(jwtToken)
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .email(user.getEmail()).
+                role(user.getRole()).
+                build();   }
+
+
+
+    @PostConstruct
+    void createAdmin(){
+        if(!repository.existsById("admin@gmail.com")) {
+           User user= User.builder().email("admin@gmail.com")
+                    .role(Role.ADMIN)
+                    .firstname("admin")
+                    .lastname("admin")
+                    .password(passwordEncoder.encode( "admin"))
+                    .build();
+            repository.save(user);
+        }
+    }
 }
